@@ -56,7 +56,7 @@ st.set_page_config(
     page_title="EAC Growth & Quality of Life",
     page_icon="🌍",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 
@@ -123,6 +123,9 @@ st.markdown(
         color: #263e33;
         font-weight: 750;
         font-size: .93rem;
+    }
+    [data-testid="stSidebar"] div[data-testid="stWidgetLabel"] p {
+        color: #fffaf0 !important;
     }
     [data-testid="stMetric"] {
         background: rgba(255,253,247,.94);
@@ -243,6 +246,66 @@ def style_figure(fig: go.Figure, height: int = 470) -> go.Figure:
 data = get_data()
 metadata = get_metadata()
 
+country_names = list(COUNTRIES.values())
+map_label_to_metric = {
+    "Income · real GDP per person": GDP_LEVEL,
+    "Health · life expectancy": LIFE,
+    "Education · secondary enrolment": EDUCATION,
+    "Growth · annual GDP/person change": GDP_GROWTH,
+}
+
+with st.sidebar:
+    st.markdown("## Explore the region")
+    st.caption("Filters update every KPI, map, chart, and summary on the right.")
+
+    selected_names = st.multiselect(
+        "Partner States",
+        options=country_names,
+        default=country_names,
+        help="Select one or more countries for regional comparison.",
+    )
+    year_range = st.slider(
+        "Study period",
+        min_value=START_YEAR,
+        max_value=END_YEAR,
+        value=(START_YEAR, END_YEAR),
+        step=1,
+    )
+    map_label = st.selectbox(
+        "Map indicator",
+        options=list(map_label_to_metric),
+        help="Choose the measure used to shade countries on the geographic map.",
+        key="map_indicator_sidebar",
+    )
+    exact_endpoints = st.toggle(
+        "Require exact endpoint years",
+        value=False,
+        help=(
+            "When enabled, a country is excluded from change rankings if either selected "
+            "endpoint year is missing. Otherwise, the first and last available values in "
+            "the selected period are used and disclosed."
+        ),
+    )
+
+    st.divider()
+    st.markdown("**About this dashboard**")
+    st.caption(
+        "Economic growth, health, and education evidence for East African Community "
+        "Partner States."
+    )
+    st.markdown("**Source**")
+    st.caption("World Bank World Development Indicators API")
+    retrieved_at = metadata.get("retrieved_at_utc", "Not recorded")
+    retrieved_date = (
+        retrieved_at[:10] if retrieved_at != "Not recorded" else retrieved_at
+    )
+    st.caption(f"Snapshot retrieved: {retrieved_date}")
+    st.link_button("World Bank API", "https://api.worldbank.org/v2")
+
+selected_codes = [code for code, name in COUNTRIES.items() if name in selected_names]
+selected_start, selected_end = year_range
+map_metric = map_label_to_metric[map_label]
+
 st.markdown(
     """
     <div class="eac-hero">
@@ -263,78 +326,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-country_names = list(COUNTRIES.values())
-map_label_to_metric = {
-    "Income · real GDP per person": GDP_LEVEL,
-    "Health · life expectancy": LIFE,
-    "Education · secondary enrolment": EDUCATION,
-    "Growth · annual GDP/person change": GDP_GROWTH,
-}
-
-with st.container(border=True):
-    st.markdown(
-        '<div class="filter-title">Explore the region</div>'
-        '<div class="filter-note">Use these controls to update every KPI, map, chart, and summary.</div>',
-        unsafe_allow_html=True,
-    )
-    country_filter, year_filter = st.columns([1.35, 1], gap="large")
-    with country_filter:
-        selected_names = st.multiselect(
-            "Partner States",
-            options=country_names,
-            default=country_names,
-            help="Select one or more countries for regional comparison.",
-        )
-    with year_filter:
-        year_range = st.slider(
-            "Study period",
-            min_value=START_YEAR,
-            max_value=END_YEAR,
-            value=(START_YEAR, END_YEAR),
-            step=1,
-        )
-
-    map_filter, method_filter = st.columns([1.35, 1], gap="large")
-    with map_filter:
-        map_label = st.selectbox(
-            "Map indicator",
-            options=list(map_label_to_metric),
-            help="Choose the measure used to shade countries on the geographic map.",
-            key="map_indicator_top",
-        )
-    with method_filter:
-        exact_endpoints = st.toggle(
-            "Require exact endpoint years",
-            value=False,
-            help=(
-                "When enabled, a country is excluded from change rankings if either selected "
-                "endpoint year is missing. Otherwise, the first and last available values in "
-                "the selected period are used and disclosed."
-            ),
-        )
-
-selected_codes = [code for code, name in COUNTRIES.items() if name in selected_names]
-selected_start, selected_end = year_range
-map_metric = map_label_to_metric[map_label]
-
-with st.sidebar:
-    st.markdown("## About this dashboard")
-    st.caption(
-        "Economic growth, health, and education evidence for East African Community "
-        "Partner States. Primary filters are kept at the top of the main page."
-    )
-    st.divider()
-    st.markdown("**Source**")
-    st.caption("World Bank World Development Indicators API")
-    retrieved_at = metadata.get("retrieved_at_utc", "Not recorded")
-    retrieved_date = (
-        retrieved_at[:10] if retrieved_at != "Not recorded" else retrieved_at
-    )
-    st.caption(f"Snapshot retrieved: {retrieved_date}")
-    st.link_button("World Bank API", "https://api.worldbank.org/v2")
-
 if not selected_codes:
-    st.warning("Select at least one Partner State in the filter panel to continue.")
+    st.warning("Select at least one Partner State in the sidebar to continue.")
     st.stop()
 
 filtered = filter_data(data, selected_codes, selected_start, selected_end)
