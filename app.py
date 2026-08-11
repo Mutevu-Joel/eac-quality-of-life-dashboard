@@ -127,6 +127,20 @@ st.markdown(
     [data-testid="stSidebar"] div[data-testid="stWidgetLabel"] p {
         color: #fffaf0 !important;
     }
+    [data-testid="stSidebar"] div[role="radiogroup"] label {
+        background: rgba(255,250,240,.08);
+        border: 1px solid rgba(255,250,240,.20);
+        border-radius: 10px;
+        padding: .42rem .55rem;
+        margin: .08rem 0;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+        background: rgba(240,186,79,.16);
+        border-color: #f0ba4f;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] label p {
+        color: #fffaf0 !important;
+    }
     [data-testid="stMetric"] {
         background: rgba(255,253,247,.94);
         border: 1px solid rgba(23,107,85,.20);
@@ -248,21 +262,21 @@ metadata = get_metadata()
 
 country_names = list(COUNTRIES.values())
 map_label_to_metric = {
-    "Income · real GDP per person": GDP_LEVEL,
-    "Health · life expectancy": LIFE,
-    "Education · secondary enrolment": EDUCATION,
-    "Growth · annual GDP/person change": GDP_GROWTH,
+    "Income per person": GDP_LEVEL,
+    "Life expectancy": LIFE,
+    "Secondary school enrolment": EDUCATION,
+    "Annual income growth": GDP_GROWTH,
 }
 
 with st.sidebar:
     st.markdown("## Explore the region")
-    st.caption("Filters update every KPI, map, chart, and summary on the right.")
+    st.caption("Choose countries and years. The dashboard on the right updates automatically.")
 
     selected_names = st.multiselect(
         "Partner States",
         options=country_names,
         default=country_names,
-        help="Select one or more countries for regional comparison.",
+        help="Choose one or more countries to compare.",
     )
     year_range = st.slider(
         "Study period",
@@ -271,19 +285,18 @@ with st.sidebar:
         value=(START_YEAR, END_YEAR),
         step=1,
     )
-    map_label = st.selectbox(
+    map_label = st.radio(
         "Map indicator",
         options=list(map_label_to_metric),
-        help="Choose the measure used to shade countries on the geographic map.",
+        help="Choose what the map colours represent.",
         key="map_indicator_sidebar",
     )
     exact_endpoints = st.toggle(
-        "Require exact endpoint years",
+        "Use only the exact start and end years",
         value=False,
         help=(
-            "When enabled, a country is excluded from change rankings if either selected "
-            "endpoint year is missing. Otherwise, the first and last available values in "
-            "the selected period are used and disclosed."
+            "Turn this on to compare only countries that have data for both selected years. "
+            "Leave it off to use the nearest available years."
         ),
     )
 
@@ -300,7 +313,10 @@ with st.sidebar:
         retrieved_at[:10] if retrieved_at != "Not recorded" else retrieved_at
     )
     st.caption(f"Snapshot retrieved: {retrieved_date}")
-    st.link_button("World Bank API", "https://api.worldbank.org/v2")
+    st.link_button(
+        "World Bank API guide",
+        "https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation",
+    )
 
 selected_codes = [code for code, name in COUNTRIES.items() if name in selected_names]
 selected_start, selected_end = year_range
@@ -337,12 +353,12 @@ if filtered.empty:
 
 kpis = compute_kpis(filtered, selected_start, selected_end, exact_endpoints)
 endpoint_caption = (
-    "Exact selected-year endpoints required"
+    "only countries with data for both selected years"
     if exact_endpoints
-    else "First and last available observations within the selected period"
+    else "the nearest available years within your selected period"
 )
 
-st.caption(f"Active comparison method: {endpoint_caption}.")
+st.caption(f"How changes are compared: {endpoint_caption}.")
 
 kpi_columns = st.columns(4)
 with kpi_columns[0]:
@@ -351,7 +367,7 @@ with kpi_columns[1]:
     st.metric(
         "Median real GDP/capita change",
         fmt(kpis["median_gdp_change_pct"], ".1f", "%"),
-        help="Median total percentage change among countries with comparable endpoints.",
+        help="The middle percentage change among the selected countries with enough data.",
     )
 with kpi_columns[2]:
     st.metric(
@@ -373,8 +389,8 @@ with st.container(border=True):
     ):
         st.markdown(f"- {bullet}")
     st.markdown(
-        '<div class="small-note">Rankings depend on available endpoint years. '
-        "Use the Data quality tab before drawing policy conclusions.</div>",
+        '<div class="small-note">Some countries do not have data for every year. '
+        "Check the Data quality tab before making conclusions.</div>",
         unsafe_allow_html=True,
     )
 
@@ -389,11 +405,11 @@ with overview_tab:
         map_data = latest_available_snapshot(filtered, map_metric, selected_end)
         st.subheader("Geographic view")
         st.caption(
-            f"Latest available {METRIC_META[map_metric]['short_label'].lower()} value "
-            f"up to {selected_end}; hover to see each observation year."
+            f"This map shows the latest available {METRIC_META[map_metric]['short_label'].lower()} "
+            f"up to {selected_end}. Point to a country to see its value and year."
         )
         if map_data.empty:
-            st.info("No map observations are available for the current filters.")
+            st.info("No map data is available for these choices.")
         else:
             map_fig = px.choropleth(
                 map_data,
@@ -429,10 +445,10 @@ with overview_tab:
 
     with trend_column:
         st.subheader("Economic trajectory")
-        st.caption("Interactive lines preserve the annual pattern behind the endpoint ranking.")
+        st.caption("Each line shows how income per person changed from year to year.")
         gdp_line_data = filtered.dropna(subset=[GDP_LEVEL])
         if gdp_line_data.empty:
-            st.info("No GDP-per-capita observations are available.")
+            st.info("No income data is available for these choices.")
         else:
             gdp_fig = px.line(
                 gdp_line_data,
@@ -461,7 +477,7 @@ with overview_tab:
             "absolute_change", ascending=True
         )
         if education_changes.empty:
-            st.info("No countries have two usable enrolment endpoints for this period.")
+            st.info("There is not enough school enrolment data for this period.")
         else:
             education_fig = px.bar(
                 education_changes,
@@ -499,11 +515,11 @@ with overview_tab:
             filtered, selected_start, selected_end, exact_endpoints
         )
         st.caption(
-            "Mean normalised progress minus cross-dimension imbalance; an analytical score, "
-            "not an official World Bank index."
+            "This score combines changes in income, life expectancy, and school enrolment. "
+            "It was created for this dashboard and is not a World Bank score."
         )
         if balance.empty:
-            st.info("Not enough overlapping economic, health, and education endpoints.")
+            st.info("There is not enough data to calculate this score.")
         else:
             balance_plot = balance.sort_values("balanced_score")
             balance_fig = px.bar(
@@ -564,7 +580,7 @@ with relationship_tab:
                 )
         indexed = pd.DataFrame(indexed_rows)
         if indexed.empty:
-            st.info("No indexed comparison is available for this country.")
+            st.info("There is not enough data to compare income and life expectancy.")
         else:
             indexed_fig = px.line(
                 indexed,
@@ -587,9 +603,9 @@ with relationship_tab:
 
     with relationship_right:
         paired = filtered[["country_code", "country", "year", GDP_LEVEL, LIFE]].dropna()
-        st.caption("Each point is a country-year observation; click legend items to isolate states.")
+        st.caption("Each dot shows one country in one year. Click a country name to show or hide it.")
         if len(paired) < 3:
-            st.info("At least three paired observations are required for this chart.")
+            st.info("This chart needs at least three records with both measures available.")
         else:
             scatter_fig = px.scatter(
                 paired,
@@ -613,8 +629,8 @@ with relationship_tab:
             st.plotly_chart(scatter_fig, width="stretch", config={"displaylogo": False})
             correlation = paired[GDP_LEVEL].corr(paired[LIFE])
             st.caption(
-                f"Pooled Pearson correlation: {correlation:.2f} across {len(paired)} paired "
-                "observations. Association does not establish causation."
+                f"The correlation is {correlation:.2f} using {len(paired)} records. "
+                "A relationship between the measures does not prove that one caused the other."
             )
 
     st.subheader("Annual economic growth pattern")
@@ -629,14 +645,14 @@ with relationship_tab:
             color_continuous_midpoint=0,
             aspect="auto",
             labels={"x": "Year", "y": "", "color": "Annual growth (%)"},
-            title="GDP-per-capita growth rates reveal shocks hidden by endpoint totals",
+            title="Year-by-year change in income per person",
         )
         style_figure(growth_heatmap, 440)
         st.plotly_chart(growth_heatmap, width="stretch", config={"displaylogo": False})
 
 with drill_tab:
     st.subheader("Country profile")
-    st.caption("Drill from the regional view into one Partner State and export its evidence.")
+    st.caption("Choose a country to see its details and download its data.")
     drill_country = st.selectbox(
         "Partner State",
         options=[COUNTRIES[code] for code in selected_codes],
@@ -674,7 +690,7 @@ with drill_tab:
         {metric: METRIC_META[metric]["short_label"] for metric in [GDP_LEVEL, LIFE, EDUCATION]}
     )
     if profile_long.empty:
-        st.info("No profile data are available for this country and period.")
+        st.info("No data is available for this country and period.")
     else:
         profile_fig = px.line(
             profile_long,
@@ -723,15 +739,15 @@ with drill_tab:
 with quality_tab:
     st.subheader("Data quality and audit trail")
     st.caption(
-        "Missing observations remain missing; gross enrolment may legitimately exceed 100%; "
-        "IQR outliers are flagged for review and are not automatically removed."
+        "Blank values stay blank. School enrolment can be above 100%. Unusual values are "
+        "marked for checking but are not deleted."
     )
     completeness = completeness_table(filtered, selected_start, selected_end)
     quality_left, quality_right = st.columns([1.3, 0.7])
 
     with quality_left:
         if completeness.empty:
-            st.info("No completeness results are available.")
+            st.info("There is no data to check for missing values.")
         else:
             completeness_pivot = completeness.pivot(
                 index="country", columns="metric_label", values="completeness_pct"
@@ -796,7 +812,6 @@ with quality_tab:
 
 st.divider()
 st.caption(
-    "Source: World Bank World Development Indicators API. Real GDP per capita uses constant "
-    "2015 US dollars. Gross secondary enrolment can exceed 100%. Dashboard results update with "
-    "the selected countries, years, endpoint method, and map indicator."
+    "Source: World Bank World Development Indicators. Income per person is measured in constant "
+    "2015 US dollars. School enrolment can be above 100%. All results change when you use the filters."
 )

@@ -399,36 +399,37 @@ def executive_summary(
     if not gdp.empty:
         leader = gdp.sort_values("percent_change", ascending=False).iloc[0]
         bullets.append(
-            f"{leader['country']} recorded the highest comparable real GDP-per-capita "
-            f"increase ({leader['percent_change']:.1f}%) between {int(leader['start_year'])} "
-            f"and {int(leader['end_year'])}."
+            f"{leader['country']} had the largest increase in income per person after "
+            f"adjusting for inflation: {leader['percent_change']:.1f}% between "
+            f"{int(leader['start_year'])} and {int(leader['end_year'])}."
         )
 
     life = kpis["life_changes"]
     if not life.empty:
         bullets.append(
-            f"Median life expectancy changed by {life['absolute_change'].median():.1f} years "
-            f"across countries with usable endpoints."
+            f"For the middle country in the group, life expectancy changed by "
+            f"{life['absolute_change'].median():.1f} years."
         )
 
     education = kpis["education_changes"]
     if not education.empty:
         leader = education.sort_values("absolute_change", ascending=False).iloc[0]
         bullets.append(
-            f"{leader['country']} had the largest observed secondary-enrolment improvement "
-            f"({leader['absolute_change']:.1f} percentage points)."
+            f"Secondary school enrolment improved most in {leader['country']}, rising by "
+            f"{leader['absolute_change']:.1f} percentage points."
         )
 
     paired = frame[[GDP_LEVEL, LIFE]].dropna()
     if len(paired) >= 3 and paired[GDP_LEVEL].nunique() > 1 and paired[LIFE].nunique() > 1:
         correlation = paired[GDP_LEVEL].corr(paired[LIFE])
         bullets.append(
-            f"Across {len(paired)} paired country-year observations, the pooled GDP-life "
-            f"expectancy correlation is {correlation:.2f}; this is association, not causation."
+            f"The relationship between income per person and life expectancy is "
+            f"{correlation:.2f}, based on {len(paired)} records. This pattern does not prove "
+            "that one measure caused the other."
         )
 
     bullets.append(
-        f"Average indicator completeness for the active period is "
-        f"{kpis['average_completeness_pct']:.1f}%; endpoint years should be checked before ranking."
+        f"The dataset contains {kpis['average_completeness_pct']:.1f}% of the values expected "
+        "for your choices. Check missing data before comparing countries."
     )
     return bullets
