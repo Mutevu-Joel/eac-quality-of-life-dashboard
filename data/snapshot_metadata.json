@@ -1,0 +1,9 @@
+{
+  "retrieved_at_utc": "2026-08-11T05:41:56.264481+00:00",
+  "source": "World Bank World Development Indicators",
+  "source_url": "https://api.worldbank.org/v2",
+  "rows": 120,
+  "countries": 8,
+  "start_year": 2010,
+  "end_year": 2024
+}
