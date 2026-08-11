@@ -38,25 +38,25 @@ DATA_PATH = BASE_DIR / "data" / "world_bank_eac_2010_2024.csv"
 METADATA_PATH = BASE_DIR / "data" / "snapshot_metadata.json"
 
 COUNTRY_COLORS = {
-    "BDI": "#A44A3F",
-    "COD": "#3D5A80",
-    "KEN": "#008E7A",
-    "RWA": "#E59F32",
-    "SOM": "#6A4C93",
-    "SSD": "#D85C41",
-    "TZA": "#2A9D8F",
-    "UGA": "#7A8B38",
+    "BDI": "#9F4A35",
+    "COD": "#315D72",
+    "KEN": "#176B55",
+    "RWA": "#D4912A",
+    "SOM": "#4E7590",
+    "SSD": "#C85A38",
+    "TZA": "#168C82",
+    "UGA": "#687A38",
 }
 MEASURE_COLORS = {
-    "Real GDP per capita": "#0B6E75",
-    "Life expectancy": "#D97732",
+    "Real GDP per capita": "#176B55",
+    "Life expectancy": "#C85A38",
 }
 
 st.set_page_config(
     page_title="EAC Growth & Quality of Life",
     page_icon="🌍",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 
@@ -64,51 +64,142 @@ st.markdown(
     """
     <style>
     :root {
-        --ink: #173238;
-        --muted: #60757a;
-        --teal: #0b6e75;
-        --cream: #f6f3ea;
-        --gold: #d69b3a;
+        --ink: #1f3028;
+        --muted: #5c6c62;
+        --forest: #176b55;
+        --lake: #247a8a;
+        --sand: #f3e5c7;
+        --cream: #fbf6e8;
+        --ochre: #d4912a;
+        --clay: #a84f35;
     }
-    .stApp { background: linear-gradient(180deg, #f6f3ea 0%, #fbfaf7 34%, #ffffff 100%); }
-    .block-container { max-width: 1500px; padding-top: 1.5rem; padding-bottom: 3rem; }
-    [data-testid="stSidebar"] { background: #102f35; }
-    [data-testid="stSidebar"] * { color: #f7f4ea; }
-    [data-testid="stSidebar"] .stMultiSelect div[data-baseweb="select"] > div,
-    [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
-        background: #173f46;
+    .stApp {
+        background:
+          radial-gradient(circle at 92% 3%, rgba(212,145,42,.13), transparent 24rem),
+          linear-gradient(180deg, #fbf6e8 0%, #fffdf8 44%, #f8f3e9 100%);
+    }
+    .block-container { max-width: 1500px; padding-top: 1.2rem; padding-bottom: 3rem; }
+    [data-testid="stSidebar"] { background: #183d34; }
+    [data-testid="stSidebar"] * { color: #fffaf0; }
+    [data-testid="stSidebar"] a { color: #f2c46d !important; }
+    [data-testid="stHeader"] { background: rgba(251,246,232,.92); }
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(255,253,247,.93);
+        border: 1px solid rgba(80,78,51,.20);
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(73,58,34,.07);
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+    div[data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+        background: #fffaf0 !important;
+        border: 2px solid #40705f !important;
+        border-radius: 12px !important;
+        min-height: 3rem;
+        color: #1f3028 !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] span,
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] input,
+    div[data-testid="stMultiSelect"] div[data-baseweb="select"] span,
+    div[data-testid="stMultiSelect"] div[data-baseweb="select"] input {
+        color: #1f3028 !important;
+        -webkit-text-fill-color: #1f3028 !important;
+        opacity: 1 !important;
+    }
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] svg,
+    div[data-testid="stMultiSelect"] div[data-baseweb="select"] svg {
+        fill: #176b55 !important;
+    }
+    div[data-testid="stSelectbox"]:focus-within div[data-baseweb="select"] > div,
+    div[data-testid="stMultiSelect"]:focus-within div[data-baseweb="select"] > div {
+        border-color: #a84f35 !important;
+        box-shadow: 0 0 0 3px rgba(168,79,53,.20) !important;
+    }
+    div[role="listbox"] {
+        background: #fffaf0 !important;
+        color: #1f3028 !important;
+    }
+    div[data-testid="stWidgetLabel"] p {
+        color: #263e33;
+        font-weight: 750;
+        font-size: .93rem;
     }
     [data-testid="stMetric"] {
-        background: rgba(255,255,255,.88);
-        border: 1px solid rgba(11,110,117,.16);
+        background: rgba(255,253,247,.94);
+        border: 1px solid rgba(23,107,85,.20);
+        border-top: 4px solid #d4912a;
         border-radius: 16px;
         padding: 1rem 1.1rem;
-        box-shadow: 0 8px 24px rgba(20,57,63,.06);
+        box-shadow: 0 8px 24px rgba(73,58,34,.07);
     }
-    [data-testid="stMetricLabel"] { color: #60757a; }
-    [data-testid="stMetricValue"] { color: #173238; }
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background: rgba(255,255,255,.72);
-        border-color: rgba(11,110,117,.15);
-        border-radius: 18px;
+    [data-testid="stMetricLabel"] { color: #5c6c62; }
+    [data-testid="stMetricValue"] { color: #1f3028; }
+    .eac-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 1.55rem 1.8rem 1.45rem;
+        border-radius: 22px;
+        border: 1px solid rgba(23,107,85,.20);
+        background:
+          linear-gradient(105deg, rgba(255,250,240,.98) 0%, rgba(243,229,199,.90) 67%, rgba(212,145,42,.17) 100%);
+        box-shadow: 0 14px 34px rgba(73,58,34,.08);
+        margin-bottom: 1rem;
+    }
+    .eac-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 8px;
+        background: repeating-linear-gradient(
+            90deg,
+            #176b55 0 42px,
+            #f0ba4f 42px 62px,
+            #a84f35 62px 88px,
+            #247a8a 88px 126px,
+            #1f3028 126px 140px
+        );
+    }
+    .eac-hero::after {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        right: -65px;
+        bottom: -105px;
+        border: 24px solid rgba(23,107,85,.09);
+        transform: rotate(45deg);
     }
     .hero-kicker {
-        color: #0b6e75; font-weight: 800; letter-spacing: .12em;
-        text-transform: uppercase; font-size: .78rem; margin-bottom: .35rem;
+        color: #176b55; font-weight: 800; letter-spacing: .12em;
+        text-transform: uppercase; font-size: .78rem; margin: .3rem 0 .35rem;
     }
     .hero-title {
-        color: #173238; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.04;
+        color: #1f3028; font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.04;
         font-weight: 800; letter-spacing: -.04em; margin: 0 0 .5rem 0;
     }
-    .hero-subtitle { color: #60757a; font-size: 1.05rem; max-width: 850px; }
+    .hero-subtitle { color: #52665b; font-size: 1.05rem; max-width: 850px; }
     .pill {
         display: inline-block; padding: .28rem .65rem; margin: .3rem .35rem .3rem 0;
-        border-radius: 999px; background: #e4f0ed; color: #0b6e75;
+        border-radius: 999px; background: #e4eee7; color: #176b55;
         font-size: .78rem; font-weight: 700;
     }
-    .summary-title { color: #173238; font-weight: 800; font-size: 1.05rem; }
-    .small-note { color: #60757a; font-size: .84rem; }
-    h1, h2, h3 { color: #173238; letter-spacing: -.02em; }
+    .filter-title {
+        color: #176b55; font-weight: 850; font-size: 1.08rem;
+        letter-spacing: .01em; margin-bottom: .05rem;
+    }
+    .filter-note { color: #5c6c62; font-size: .86rem; margin-bottom: .55rem; }
+    .summary-title { color: #1f3028; font-weight: 800; font-size: 1.05rem; }
+    .small-note { color: #5c6c62; font-size: .84rem; }
+    h1, h2, h3 { color: #1f3028; letter-spacing: -.02em; }
+    button[data-baseweb="tab"] { font-weight: 750; }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #176b55 !important;
+        border-bottom-color: #d4912a !important;
+    }
+    @media (max-width: 700px) {
+        .block-container { padding-top: .7rem; }
+        .eac-hero { padding: 1.3rem 1.1rem 1.15rem; }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -139,69 +230,111 @@ def style_figure(fig: go.Figure, height: int = 470) -> go.Figure:
         margin=dict(l=20, r=20, t=64, b=30),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(255,255,255,.72)",
-        font=dict(family="Arial, sans-serif", color="#173238"),
-        title_font=dict(size=20, color="#173238"),
-        hoverlabel=dict(bgcolor="white", font_color="#173238"),
+        font=dict(family="Arial, sans-serif", color="#1f3028"),
+        title_font=dict(size=20, color="#1f3028"),
+        hoverlabel=dict(bgcolor="#fffaf0", font_color="#1f3028"),
         legend_title_text="",
     )
     fig.update_xaxes(showgrid=False, zeroline=False)
-    fig.update_yaxes(gridcolor="rgba(23,50,56,.10)", zerolinecolor="rgba(23,50,56,.25)")
+    fig.update_yaxes(gridcolor="rgba(31,48,40,.10)", zerolinecolor="rgba(31,48,40,.25)")
     return fig
 
 
 data = get_data()
 metadata = get_metadata()
 
+st.markdown(
+    """
+    <div class="eac-hero">
+      <div class="hero-kicker">Ukuaji na ustawi · East African Community policy dashboard</div>
+      <div class="hero-title">Growth that people can feel?</div>
+      <div class="hero-subtitle">
+        Explore whether real economic growth across EAC Partner States has moved together with
+        longer lives and broader access to secondary education.
+      </div>
+      <div>
+        <span class="pill">World Bank WDI</span>
+        <span class="pill">2010–2024</span>
+        <span class="pill">8 Partner States</span>
+        <span class="pill">Interactive evidence</span>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+country_names = list(COUNTRIES.values())
+map_label_to_metric = {
+    "Income · real GDP per person": GDP_LEVEL,
+    "Health · life expectancy": LIFE,
+    "Education · secondary enrolment": EDUCATION,
+    "Growth · annual GDP/person change": GDP_GROWTH,
+}
+
+with st.container(border=True):
+    st.markdown(
+        '<div class="filter-title">Explore the region</div>'
+        '<div class="filter-note">Use these controls to update every KPI, map, chart, and summary.</div>',
+        unsafe_allow_html=True,
+    )
+    country_filter, year_filter = st.columns([1.35, 1], gap="large")
+    with country_filter:
+        selected_names = st.multiselect(
+            "Partner States",
+            options=country_names,
+            default=country_names,
+            help="Select one or more countries for regional comparison.",
+        )
+    with year_filter:
+        year_range = st.slider(
+            "Study period",
+            min_value=START_YEAR,
+            max_value=END_YEAR,
+            value=(START_YEAR, END_YEAR),
+            step=1,
+        )
+
+    map_filter, method_filter = st.columns([1.35, 1], gap="large")
+    with map_filter:
+        map_label = st.selectbox(
+            "Map indicator",
+            options=list(map_label_to_metric),
+            help="Choose the measure used to shade countries on the geographic map.",
+            key="map_indicator_top",
+        )
+    with method_filter:
+        exact_endpoints = st.toggle(
+            "Require exact endpoint years",
+            value=False,
+            help=(
+                "When enabled, a country is excluded from change rankings if either selected "
+                "endpoint year is missing. Otherwise, the first and last available values in "
+                "the selected period are used and disclosed."
+            ),
+        )
+
+selected_codes = [code for code, name in COUNTRIES.items() if name in selected_names]
+selected_start, selected_end = year_range
+map_metric = map_label_to_metric[map_label]
+
 with st.sidebar:
-    st.markdown("## EAC explorer")
-    st.caption("Use the controls to update every KPI, chart, map, and summary.")
-
-    country_names = list(COUNTRIES.values())
-    selected_names = st.multiselect(
-        "Partner States",
-        options=country_names,
-        default=country_names,
-        help="Select one or more countries for regional comparison.",
+    st.markdown("## About this dashboard")
+    st.caption(
+        "Economic growth, health, and education evidence for East African Community "
+        "Partner States. Primary filters are kept at the top of the main page."
     )
-    selected_codes = [code for code, name in COUNTRIES.items() if name in selected_names]
-
-    year_range = st.slider(
-        "Study period",
-        min_value=START_YEAR,
-        max_value=END_YEAR,
-        value=(START_YEAR, END_YEAR),
-        step=1,
-    )
-    selected_start, selected_end = year_range
-
-    exact_endpoints = st.toggle(
-        "Require exact endpoint years",
-        value=False,
-        help=(
-            "When enabled, a country is excluded from change rankings if either selected "
-            "endpoint year is missing. Otherwise, the first and last available values in "
-            "the selected period are used and disclosed."
-        ),
-    )
-
-    map_label_to_metric = {
-        METRIC_META[GDP_LEVEL]["label"]: GDP_LEVEL,
-        METRIC_META[LIFE]["label"]: LIFE,
-        METRIC_META[EDUCATION]["label"]: EDUCATION,
-        METRIC_META[GDP_GROWTH]["label"]: GDP_GROWTH,
-    }
-    map_label = st.selectbox("Map indicator", options=list(map_label_to_metric))
-    map_metric = map_label_to_metric[map_label]
-
     st.divider()
     st.markdown("**Source**")
     st.caption("World Bank World Development Indicators API")
     retrieved_at = metadata.get("retrieved_at_utc", "Not recorded")
-    st.caption(f"Snapshot retrieved: {retrieved_at[:10] if retrieved_at != 'Not recorded' else retrieved_at}")
+    retrieved_date = (
+        retrieved_at[:10] if retrieved_at != "Not recorded" else retrieved_at
+    )
+    st.caption(f"Snapshot retrieved: {retrieved_date}")
     st.link_button("World Bank API", "https://api.worldbank.org/v2")
 
 if not selected_codes:
-    st.warning("Select at least one Partner State in the sidebar to continue.")
+    st.warning("Select at least one Partner State in the filter panel to continue.")
     st.stop()
 
 filtered = filter_data(data, selected_codes, selected_start, selected_end)
@@ -216,23 +349,6 @@ endpoint_caption = (
     else "First and last available observations within the selected period"
 )
 
-st.markdown(
-    """
-    <div class="hero-kicker">East African Community policy dashboard</div>
-    <div class="hero-title">Growth that people can feel?</div>
-    <div class="hero-subtitle">
-      Explore whether real economic growth across EAC Partner States has moved together with
-      longer lives and broader access to secondary education.
-    </div>
-    <div>
-      <span class="pill">World Bank WDI</span>
-      <span class="pill">2010-2024</span>
-      <span class="pill">8 Partner States</span>
-      <span class="pill">Interactive evidence</span>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 st.caption(f"Active comparison method: {endpoint_caption}.")
 
 kpi_columns = st.columns(4)
@@ -297,7 +413,7 @@ with overview_tab:
                     "value": ":,.2f",
                     "observed_year": True,
                 },
-                color_continuous_scale=["#e9e4d8", "#8ec2b9", "#0b6e75", "#173238"],
+                color_continuous_scale=["#f3e5c7", "#e2b45b", "#4d9277", "#176b55"],
                 labels={"value": METRIC_META[map_metric]["short_label"]},
                 scope="africa",
                 title=f"{METRIC_META[map_metric]['label']} across selected states",
@@ -305,9 +421,14 @@ with overview_tab:
             map_fig.update_geos(
                 showframe=False,
                 showcoastlines=True,
-                coastlinecolor="rgba(23,50,56,.35)",
+                coastlinecolor="rgba(31,48,40,.45)",
                 bgcolor="rgba(0,0,0,0)",
-                landcolor="#ece8df",
+                landcolor="#eadbbb",
+                showocean=True,
+                oceancolor="#dcecef",
+                showlakes=True,
+                lakecolor="#c9e3e7",
+                countrycolor="rgba(31,48,40,.30)",
             )
             style_figure(map_fig, 515)
             map_fig.update_layout(coloraxis_colorbar_title=METRIC_META[map_metric]["unit"])
@@ -373,7 +494,7 @@ with overview_tab:
                 )
             )
             style_figure(education_fig, 455)
-            education_fig.add_vline(x=0, line_width=1, line_color="rgba(23,50,56,.45)")
+            education_fig.add_vline(x=0, line_width=1, line_color="rgba(31,48,40,.45)")
             education_fig.update_layout(showlegend=False)
             st.plotly_chart(
                 education_fig, width="stretch", config={"displaylogo": False}
@@ -398,7 +519,7 @@ with overview_tab:
                 y="country",
                 orientation="h",
                 color="balanced_score",
-                color_continuous_scale=["#e9e4d8", "#8ec2b9", "#0b6e75"],
+                color_continuous_scale=["#f3e5c7", "#d4912a", "#176b55"],
                 range_color=[0, 100],
                 hover_data={
                     "economy_score": ":.1f",
@@ -468,7 +589,7 @@ with relationship_tab:
                 title=f"Relative progress in {comparison_country}",
             )
             style_figure(indexed_fig, 470)
-            indexed_fig.add_hline(y=100, line_dash="dot", line_color="rgba(23,50,56,.45)")
+            indexed_fig.add_hline(y=100, line_dash="dot", line_color="rgba(31,48,40,.45)")
             st.plotly_chart(indexed_fig, width="stretch", config={"displaylogo": False})
 
     with relationship_right:
@@ -569,7 +690,7 @@ with drill_tab:
             facet_row="indicator",
             color="indicator",
             markers=True,
-            color_discrete_sequence=["#0b6e75", "#d97732", "#6a4c93"],
+            color_discrete_sequence=["#176b55", "#c85a38", "#247a8a"],
             labels={"year": "Year", "value": "Observed value", "indicator": ""},
             title=f"Economic, health, and education profile: {drill_country}",
         )
@@ -625,7 +746,7 @@ with quality_tab:
             completeness_fig = px.imshow(
                 completeness_pivot,
                 text_auto=".0f",
-                color_continuous_scale=["#efe8d8", "#8ec2b9", "#0b6e75"],
+                color_continuous_scale=["#f3e5c7", "#e2b45b", "#176b55"],
                 range_color=[0, 100],
                 aspect="auto",
                 labels={"x": "Indicator", "y": "", "color": "Complete (%)"},

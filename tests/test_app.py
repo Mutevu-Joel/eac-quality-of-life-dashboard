@@ -14,3 +14,4 @@ def test_dashboard_renders_without_exceptions():
     assert len(app.tabs) == 4
     assert len(app.multiselect) >= 1
     assert len(app.slider) >= 1
+    assert any(widget.label == "Map indicator" for widget in app.selectbox)
